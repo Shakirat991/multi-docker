@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t shakirah/docker-react -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true shakirah/docker-react npm run test
+
+after_success:
+  - docker build -t shakirah/multi-client ./client
+  - docker build -t shakirah/multi-nginx ./nginx
+  - docker build -t shakirah/multi-server ./server
+  - docker build -t shakirah/multi-worker ./worker 
+  # Log in to the docekr CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push shakirah/multi-client 
+  - docker push shakirah/multi-nginx
+  - docker push shakirah/multi-server
+  - docker push shakirah/multi-worker
+
